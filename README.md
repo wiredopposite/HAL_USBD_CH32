@@ -2,7 +2,7 @@
 USB device stack and hardware abstraction for the CH32V20x full speed peripheral
 
 This is a very basic implementation and currently lacks several features:
-- Double buffered endpoints
+- Double buffered endpoint handling
 - Bulk transfer handling
 - Support for the high speed USB peripheral
 - Alternate interface settings
