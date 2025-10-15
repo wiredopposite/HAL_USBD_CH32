@@ -3,6 +3,7 @@
 #include "ch32v20x.h"
 #include "usbd_ll.h"
 #include "usbd_hal.h"
+#include "usbd_hal_debug.h"
 
 #define PMA_DATA_START 0x40U
 #define PMA_SIZE       512U
@@ -174,7 +175,7 @@ static void HAL_USBD_PowerOff(HAL_USBD_Ctx* ctx) {
 }   
 
 static void HAL_USBD_Enter_LowPowerMode(HAL_USBD_Ctx* ctx) {
-    printf("usb enter low power mode\r\n"); 
+    USBD_PRINTF("USBD enter low power mode\r\n"); 
     ctx->devState = USBD_SUSPENDED;
     // if (HAL_USBD_Suspend_Cb) {
     //     HAL_USBD_Suspend_Cb(ctx);
@@ -182,7 +183,7 @@ static void HAL_USBD_Enter_LowPowerMode(HAL_USBD_Ctx* ctx) {
 }
 
 static void HAL_USBD_Leave_LowPowerMode(HAL_USBD_Ctx* ctx) {
-	printf("usb leave low power mode\r\n"); 
+	USBD_PRINTF("USBD leave low power mode\r\n"); 
 	if (ctx->currentCfg != 0) {
         ctx->devState = USBD_CONFIGURED; 
     } else {
@@ -526,7 +527,7 @@ static void HAL_USBD_EPOpen(HAL_USBD_Ctx* ctx, uint8_t epAddr, uint16_t epMps, u
     }
 
     if ((ctx->pmaOffset + epMps) > PMA_SIZE) {
-        printf("Error: No more room in PMA for EP%d\r\n", epNum);
+        USBD_PRINTF("Error: No more room in PMA for EP%d\r\n", epNum);
         return;
     }
 
@@ -603,7 +604,7 @@ static bool HAL_USBD_EPStalled(HAL_USBD_Ctx* ctx, uint8_t epAddr) {
 }
 
 static void HAL_USBD_HandleReset(HAL_USBD_Ctx* ctx) {
-    printf("USB RESET\r\n");
+    USBD_PRINTF("USBD RESET\r\n");
     ctx->devState = USBD_ATTACHED;
     ctx->ctrlState = USBD_CTRL_IDLE;
     ctx->currentCfg = 0;
@@ -622,7 +623,7 @@ static void HAL_USBD_HandleCtrlStall(HAL_USBD_Ctx* ctx) {
     ctx->ctrlTxStatus = EP_TX_STALL;
     ctx->ctrlState = USBD_CTRL_IDLE;
     ctx->ctrlCompleteCb = NULL;
-    printf("USB CTRL STALL\r\n");
+    USBD_PRINTF("USBD CTRL STALL\r\n");
 }
 
 static void HAL_USBD_SetAddressComplete_Cb(HAL_USBD_Ctx* ctx, const USB_SetupReq* req, const uint8_t* data, uint16_t len) {
@@ -754,7 +755,7 @@ static bool HAL_USBD_HandleStdReq(HAL_USBD_Ctx* ctx) {
         case USB_REQ_STD_SET_FEATURE:
         case USB_REQ_STD_CLEAR_FEATURE:
             /* EP feature req sets or clears STALL */
-            printf("Feature Req EP: %d, %s\n", req->wIndex, 
+            USBD_PRINTF("Feature Req EP: %d, %s\n", req->wIndex, 
                 (req->bRequest == USB_REQ_STD_SET_FEATURE) ? "SET" : "CLEAR");
             HAL_USBD_EPSetStall(
                 ctx,
@@ -854,7 +855,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
         if (len == 8) {
             ctx->ctrlRxStatus = EP_RX_VALID;
         } else {
-            printf("Error: Invalid setup packet length %ld\r\n", len);
+            USBD_PRINTF("Error: Invalid setup packet length %ld\r\n", len);
             HAL_USBD_HandleCtrlStall(ctx);
             return;
         }
@@ -866,7 +867,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
             break;
         }
         if (ctx->rxLen > sizeof(ctx->rxBuffer)) {
-            printf("Error: Ctrl RX buffer overflow %d > %d\r\n", ctx->rxLen, sizeof(ctx->rxBuffer));
+            USBD_PRINTF("Error: Ctrl RX buffer overflow %d > %d\r\n", ctx->rxLen, sizeof(ctx->rxBuffer));
             HAL_USBD_HandleCtrlStall(ctx);
             return;
         }
@@ -877,7 +878,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
     case USBD_CTRL_DATA_OUT:
         len = USBD_LL_EPRead(0, &ctx->rxBuffer[ctx->rxIdx], ctx->rxLen - ctx->rxIdx);
         if (!len) {
-            printf("no data received\r\n");
+            USBD_PRINTF("Error: No data received on DATA_OUT\r\n");
             HAL_USBD_HandleCtrlStall(ctx);
             return;
         }
@@ -891,7 +892,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
     case USBD_CTRL_STATUS_OUT:
         // must read a ZLP here
         if (USBD_LL_GetEPRxCount(0) != 0) {
-            printf("status out with data\r\n");
+            USBD_PRINTF("Error: STATUS OUT with data\r\n");
             HAL_USBD_HandleCtrlStall(ctx);
             return;
         }
@@ -904,7 +905,6 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
 
     default:
         len = USBD_LL_GetEPRxCount(0);
-        printf("unexpected packet, len=%ld\r\n", len);
         if (len == 0) {
             /* Random ZLP, reset the request */
             ctx->ctrlState = USBD_CTRL_IDLE;
@@ -912,7 +912,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
             ctx->ctrlRxStatus = EP_RX_VALID;
         } else {
             /* Unexpected packet */
-            printf("Error: Unexpected packet in state %d\r\n", ctx->ctrlState); 
+            USBD_PRINTF("Error: Unexpected packet in state %d\r\n", ctx->ctrlState); 
             HAL_USBD_HandleCtrlStall(ctx);
         }
         return;
@@ -929,7 +929,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
         if (ctx->ctrlState == USBD_CTRL_DATA_IN) {
             if (ctx->txLen == 0 && req->wLength != 0) {
                 /* No data queued by the application */
-                printf("Error: No data queued for ctrl in\r\n");
+                USBD_PRINTF("Error: No data queued for DATA IN\r\n");
                 HAL_USBD_HandleCtrlStall(ctx);
                 return;
             }
@@ -944,7 +944,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
         }
     } else {
         /* Unhandled request */
-        printf("Error: Unhandled request 0x%02X\r\n", req->bRequest);
+        USBD_PRINTF("Error: Unhandled request 0x%02X\r\n", req->bRequest);
         HAL_USBD_HandleCtrlStall(ctx);
     }
 }
