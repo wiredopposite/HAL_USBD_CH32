@@ -824,6 +824,7 @@ static void HAL_USBD_HandleCtrlIn(HAL_USBD_Ctx* ctx) {
         }
         if (len != ctx->maxPacketSize || ctx->txLen == req->wLength) {
             ctx->ctrlState = USBD_CTRL_STATUS_OUT;
+            ctx->ctrlRxStatus = EP_RX_VALID;
         }
         break;
     case USBD_CTRL_STATUS_IN:
@@ -928,7 +929,7 @@ static void HAL_USBD_HandleCtrlOut(HAL_USBD_Ctx* ctx) {
         if (ctx->ctrlState == USBD_CTRL_DATA_IN) {
             if (ctx->txLen == 0 && req->wLength != 0) {
                 /* No data queued by the application */
-                printf("no data queued for ctrl in\r\n");
+                printf("Error: No data queued for ctrl in\r\n");
                 HAL_USBD_HandleCtrlStall(ctx);
                 return;
             }
