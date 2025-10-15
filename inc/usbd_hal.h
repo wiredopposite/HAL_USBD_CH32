@@ -25,16 +25,6 @@ typedef enum {
 } USBD_Instance;
 
 typedef enum _USBD_CtrlState {
-    // USBD_CTRL_WAIT_SETUP = 0,   /* 0 */
-    // USBD_CTRL_SETTING_UP,       /* 1 */
-    // USBD_CTRL_IN_DATA,          /* 2 */
-    // USBD_CTRL_OUT_DATA,         /* 3 */
-    // USBD_CTRL_LAST_IN_DATA,     /* 4 */
-    // USBD_CTRL_LAST_OUT_DATA,    /* 5 */
-    // USBD_CTRL_WAIT_STATUS_IN,   /* 7 */
-    // USBD_CTRL_WAIT_STATUS_OUT,  /* 8 */
-    // USBD_CTRL_STALLED,          /* 9 */
-    // USBD_CTRL_PAUSE             /* 10 */
     USBD_CTRL_IDLE = 0,
     USBD_CTRL_DATA_OUT,
     USBD_CTRL_DATA_IN,
@@ -58,14 +48,6 @@ typedef enum _USBD_EpDir {
     USBD_EPDIR_OUT = 1,
     USBD_EPDIR_TOTAL
 } USBD_EpDir;
-
-// typedef enum _USBD_Result {
-//     USBD_SUCCESS = 0,    /* Process successfully */
-//     USBD_ERROR,
-//     USBD_UNSUPPORT,
-//     USBD_NOT_READY       /* The process has not been finished, endpoint will be
-//                             NAK to further request */
-// } USBD_Result;
 
 typedef enum _USBD_CtrlResult {
     USBD_CTRL_OKAY = 0,
