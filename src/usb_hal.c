@@ -4,6 +4,7 @@
 #include "usbd_ll.h"
 #include "usbd_hal.h"
 #include "usbd_hal_debug.h"
+#include "debug.h"
 
 #define PMA_DATA_START 0x40U
 #define PMA_SIZE       512U
